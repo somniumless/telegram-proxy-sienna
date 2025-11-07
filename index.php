@@ -5,18 +5,28 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mensaje = $_POST['mensaje'] ?? '';
+    $correo = $_POST['correo'] ?? 'No disponible';
+    $nombre = $_POST['nombre'] ?? 'Anónimo';
+
     if (empty($mensaje)) {
         echo "Por favor completa todos los campos.";
         exit;
     }
 
-    $token = "8166086804:AAF1Yas5cG1zuvzNEkGm7Jg9ddZ6GcH1f84"; // tu token de bot
+    $token = "8166086804:AAF1Yas5cG1zuvzNEkGm7Jg9ddZ6GcH1f84"; // tu token
     $chat_id = "7799542025"; // tu chat_id
     $url = "https://api.telegram.org/bot$token/sendMessage";
 
+    // 📨 Mensaje con formato
+    $texto = "📩 *Nuevo mensaje de Sienna*\n\n"
+           . "👤 *De:* $nombre\n"
+           . "📧 *Correo:* $correo\n"
+           . "💬 *Mensaje:*\n$mensaje";
+
     $data = [
         'chat_id' => $chat_id,
-        'text' => "📩 Nuevo mensaje de Sienna:\n\n" . $mensaje
+        'text' => $texto,
+        'parse_mode' => 'Markdown'
     ];
 
     $ch = curl_init();
@@ -38,3 +48,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo "Método no permitido.";
 }
 ?>
+
