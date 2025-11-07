@@ -1,28 +1,41 @@
 <?php
+// Habilitar CORS para que tu página en otro dominio pueda hacer fetch()
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mensaje = $_POST['mensaje'] ?? '';
-    $correo = $_POST['correo'] ?? 'No disponible';
-    $nombre = $_POST['nombre'] ?? 'Anónimo';
-    $tipo = $_POST['tipo'] ?? 'usuario';
+// Si es una petición OPTIONS (preflight de CORS), salir sin hacer nada más
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitizar entradas
+    $mensaje = trim($_POST['mensaje'] ?? '');
+    $correo = trim($_POST['correo'] ?? 'No disponible');
+    $nombre = trim($_POST['nombre'] ?? 'Usuario desconocido');
+    $tipo = trim($_POST['tipo'] ?? 'usuario');
+
+    // Validar campos
     if (empty($mensaje)) {
-        echo "Por favor completa todos los campos.";
+        echo "⚠️ Por favor escribe un mensaje antes de enviarlo.";
         exit;
     }
 
-    $token = "8166086804:AAF1Yas5cG1zuvzNEkGm7Jg9ddZ6GcH1f84"; // tu token del bot
-    $chat_id = "7799542025"; // tu chat_id
-    $url = "https://api.telegram.org/bot$token/sendMessage";
+    // Token y chat_id de tu bot
+    $token = "8166086804:AAF1Yas5cG1zuvzNEkGm7Jg9ddZ6GcH1f84"; 
+    $chat_id = "7799542025";
 
-    $texto = "📩 *Nuevo mensaje de Sienna*\n\n"
-           . "👤 *De:* $nombre\n"
-           . "📧 *Correo:* $correo\n"
-           . "🏷️ *Tipo:* $tipo\n"
-           . "💬 *Mensaje:*\n$mensaje";
+    // Crear texto del mensaje
+    $texto = "📩 *Nuevo mensaje de Sienna*\n\n";
+    $texto .= "👤 *Nombre:* $nombre\n";
+    $texto .= "📧 *Correo:* $correo\n";
+    $texto .= "🔖 *Tipo de usuario:* $tipo\n";
+    $texto .= "💬 *Mensaje:*\n$mensaje";
+
+    // Enviar mensaje a Telegram
+    $url = "https://api.telegram.org/bot$token/sendMessage";
 
     $data = [
         'chat_id' => $chat_id,
@@ -35,17 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
     $response = curl_exec($ch);
     $error = curl_error($ch);
     curl_close($ch);
 
+    // Respuesta al cliente (tu web)
     if ($response === false) {
-        echo "❌ Error cURL: $error";
+        echo "❌ Error al enviar a Telegram: $error";
     } else {
-        echo "✅ Mensaje enviado correctamente.";
+        echo "✅ Mensaje enviado correctamente. Gracias por contactarnos.";
     }
 } else {
-    echo "Método no permitido.";
+    echo "❌ Método no permitido. Solo se acepta POST.";
 }
 ?>
 
